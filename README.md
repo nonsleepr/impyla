@@ -1,7 +1,7 @@
 # impyla
 
-Python client for the Impala distributed query engine.
-
+Python client for the Impala and Hive.
+Forked from https://github.com/cloudera/impyla to replace dependency on [`sasl`][python-sasl] (which is hard to setup on Windows) with [`pure-sasl`][pure-sasl] (which is pure Python package).
 
 ### Features
 
@@ -126,7 +126,17 @@ Impyla implements the [Python DB API v2.0 (PEP 249)][pep249] database interface
 
 ```python
 from impala.dbapi import connect
-conn = connect(host='my.host.com', port=21050)
+conn = connect(host='my.impalahost.com', port=21050)
+cursor = conn.cursor()
+cursor.execute('SELECT * FROM mytable LIMIT 100')
+print cursor.description # prints the result set's schema
+results = cursor.fetchall()
+```
+
+Or to connect to Hive:
+```python
+from impala.dbapi import connect
+conn = connect(host='my.hivehost.com', port=10000, use_ldap=True, ldap_user="user", ldap_password="password")
 cursor = conn.cursor()
 cursor.execute('SELECT * FROM mytable LIMIT 100')
 print cursor.description # prints the result set's schema
@@ -164,3 +174,5 @@ df = as_pandas(cur)
 [numba]: http://numba.pydata.org/
 [llvm]: http://llvm.org/
 [pytest]: http://pytest.org/latest/
+[python-sasl]: https://pypi.python.org/pypi/sasl
+[pure-sasl]: https://pypi.python.org/pypi/pure-sasl
