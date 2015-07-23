@@ -37,7 +37,7 @@ def connect(host='localhost', port=21050, protocol='hiveserver2',
             database=None, timeout=45, use_ssl=False, ca_cert=None,
             use_ldap=False, ldap_user=None, ldap_password=None,
             use_kerberos=False, kerberos_service_name='impala',
-            auth_mechanism=None):
+            auth_mechanism=None, sasl_lib='sasl'):
 
     # Supported authentication mechanisms
     auth_mechanisms = ['NOSASL', 'PLAIN', 'GSSAPI', 'LDAP']
@@ -63,12 +63,12 @@ def connect(host='localhost', port=21050, protocol='hiveserver2',
     if protocol.lower() == 'beeswax':
         service = connect_to_beeswax(
             host, port, timeout, use_ssl, ca_cert, ldap_user,
-            ldap_password, kerberos_service_name, auth_mechanism)
+            ldap_password, kerberos_service_name, auth_mechanism, sasl_lib)
         return BeeswaxConnection(service, default_db=database)
     elif protocol.lower() == 'hiveserver2':
         service = connect_to_hiveserver2(
             host, port, timeout, use_ssl, ca_cert, ldap_user,
-            ldap_password, kerberos_service_name, auth_mechanism)
+            ldap_password, kerberos_service_name, auth_mechanism, sasl_lib)
         return HiveServer2Connection(service, default_db=database)
     else:
         raise NotSupportedError(

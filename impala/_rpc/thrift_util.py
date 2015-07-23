@@ -33,36 +33,33 @@ def get_socket(host, port, use_ssl, ca_cert):
 
 
 def get_transport(socket, host, kerberos_service_name, auth_mechanism="NOSASL",
-                  user=None, password=None):
+                  user=None, password=None, sasl_lib="sasl"):
     """Creates a new Thrift Transport using the specified auth_mechanism.
     Supported auth_mechanisms are:
     - None or NOSASL - returns simple buffered transport (default)
     - PLAIN  - returns a SASL transport with the PLAIN mechanism
     - GSSAPI - returns a SASL transport with the GSSAPI mechanism
     """
-    if not auth_mechanism or auth_mechanism.upper() == "NOSASL":
+    if auth_mechanism:
+        auth_mechanism = auth_mechanism.upper()
+    if not auth_mechanism or auth_mechanism == "NOSASL":
         return TBufferedTransport(socket)
 
     # Set defaults for PLAIN SASL / LDAP connections.
-    if auth_mechanism.upper() in ['LDAP', 'PLAIN']:
+    if auth_mechanism in ["LDAP", "PLAIN"]:
         if user is None: user = getpass.getuser()
         if password is None:
-            if auth_mechanism.upper() == 'LDAP':
+            if auth_mechanism == "LDAP":
                 password = ''
             else:
                 # PLAIN always requires a password for HS2.
-                password = 'password'
+                password = "password"
 
     # Initializes a sasl client
-    import sasl
     from impala.thrift_sasl import TSaslClientTransport
-    def sasl_factory():
-        sasl_client = sasl.Client()
-        sasl_client.setAttr("host", host)
-        sasl_client.setAttr("service", kerberos_service_name)
-        if auth_mechanism.upper() in ["PLAIN", "LDAP"]:
-            sasl_client.setAttr("username", user)
-            sasl_client.setAttr("password", password)
-        sasl_client.init()
-        return sasl_client
-    return TSaslClientTransport(sasl_factory, auth_mechanism.upper(), socket)
+    from impala.sasl_compat import build_sasl_factory
+
+    sasl_factory = build_sasl_factory(host, auth_mechanism, user, password,
+                                      kerberos_service_name, sasl_lib)
+
+    return TSaslClientTransport(sasl_factory, auth_mechanism, socket)
