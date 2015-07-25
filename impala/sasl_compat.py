@@ -16,13 +16,13 @@
 # SASL compatibility layer
 
 
-def build_sasl_factory(host, auth_mechanism, username, password, service,
+def build_sasl_client_factory(host, auth_mechanism, username, password, service,
                        sasl_lib="sasl"):
     if sasl_lib == "sasl":
 
         import sasl
 
-        def sasl_factory():
+        def sasl_client_factory():
             sasl_client = sasl.Client()
             sasl_client.setAttr("host", host)
             sasl_client.setAttr("service", service)
@@ -32,7 +32,7 @@ def build_sasl_factory(host, auth_mechanism, username, password, service,
             sasl_client.init()
             return sasl_client
 
-        return sasl_factory
+        return sasl_client_factory
 
     elif sasl_lib == "puresasl":
 
@@ -84,12 +84,11 @@ def build_sasl_factory(host, auth_mechanism, username, password, service,
             def getError(self):
                 return self.error
 
-        def build_sasl_factory(host, auth_mechanism, username, password, service):
-            def sasl_factory():
-                return WrappedSASLClient(host, username=username,
-                                         password=password, service=service)
+        def sasl_client_factory():
+            return WrappedSASLClient(host, username=username,
+                                     password=password, service=service)
 
-            return sasl_factory
+        return sasl_client_factory
 
     else:
         raise AttributeError("Unsupported SASL library")

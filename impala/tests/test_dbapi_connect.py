@@ -36,10 +36,10 @@ impala_beeswax_port = 21000
 hive_port = 10000
 hive_beeswax_port = 8002
 
-NO_BEESWAX = False
+NO_BEESWAX = True
 NO_BEESWAX_REASON = "Beeswax tests are disabled"
 
-class ImpalaConnectionTests(unittest.TestCase):
+class ConnectionTests(unittest.TestCase):
 
     table_prefix = _random_id(prefix='dbapi20test_')
     tablename = table_prefix + 'contests'
@@ -66,50 +66,90 @@ class ImpalaConnectionTests(unittest.TestCase):
         except:
             raise
 
-    @pytest.mark.skipif(NO_BEESWAX, reason=NO_BEESWAX_REASON)
-    def test_impala_noldap_beeswax_connect(self):
+
+@pytest.mark.skipif(NO_BEESWAX, reason=NO_BEESWAX_REASON)
+class ImpalaBeeswaxTests(ConnectionTests):
+    def test_impala_nosasl_beeswax_connect(self):
         self.connection = connect(host, impala_beeswax_port,
-                                  protocol="beeswax", use_ldap=False, timeout=5)
+                                  protocol="beeswax", auth_mechanism="NOSASL", timeout=5)
         self._execute_queries(self.connection)
 
-    def test_impala_noldap_hiveserver2_connect(self):
-        self.connection = connect(host, impala_port,
-                                  protocol="hiveserver2", use_ldap=False, timeout=5)
-        self._execute_queries(self.connection)
-
-    @pytest.mark.skipif(NO_BEESWAX, reason=NO_BEESWAX_REASON)
-    def test_hive_noldap_beeswax_connect(self):
-        self.connection = connect(host, hive_beeswax_port,
-                                  protocol="beeswax", use_ldap=False, timeout=5)
-        self._execute_queries(self.connection)
-
-    def test_hive_noldap_hiveserver2_connect(self):
-        self.connection = connect(host, hive_port,
-                                  protocol="hiveserver2", use_ldap=False, timeout=5)
-        self._execute_queries(self.connection)
-
-    @pytest.mark.skipif(NO_BEESWAX, reason=NO_BEESWAX_REASON)
-    def test_impala_ldap_beeswax_connect(self):
+    def test_impala_sasl_plain_beeswax_connect(self):
         self.connection = connect(host, impala_beeswax_port,
-                                  protocol="beeswax", use_ldap=True, timeout=5,
+                                  protocol="beeswax", auth_mechanism="PLAIN", timeout=5)
+        self._execute_queries(self.connection)
+
+    def test_impala_sasl_ldap_beeswax_connect(self):
+        self.connection = connect(host, impala_beeswax_port,
+                                  protocol="beeswax", auth_mechanism="LDAP", timeout=5,
                                   ldap_user="cloudera", ldap_password="cloudera")
         self._execute_queries(self.connection)
 
-    def test_impala_ldap_hiveserver2_connect(self):
+    def test_impala_puresasl_plain_beeswax_connect(self):
+        self.connection = connect(host, impala_beeswax_port,
+                                  protocol="beeswax", auth_mechanism="PLAIN", sasl_lib="puresasl", timeout=5)
+        self._execute_queries(self.connection)
+
+    def test_impala_puresasl_ldap_beeswax_connect(self):
+        self.connection = connect(host, impala_beeswax_port,
+                                  protocol="beeswax", auth_mechanism="LDAP", sasl_lib="puresasl", timeout=5,
+                                  ldap_user="cloudera", ldap_password="cloudera")
+        self._execute_queries(self.connection)
+
+
+class ImpalaHS2Tests(ConnectionTests):
+    def test_impala_nosasl_hiveserver2_connect(self):
         self.connection = connect(host, impala_port,
-                                  protocol="hiveserver2", use_ldap=True, timeout=5,
+                                  protocol="hiveserver2", auth_mechanism="NOSASL", timeout=5)
+        self._execute_queries(self.connection)
+
+    def test_impala_plain_sasl_hiveserver2_connect(self):
+        self.connection = connect(host, impala_port,
+                                  protocol="hiveserver2", auth_mechanism="PLAIN", timeout=5)
+        self._execute_queries(self.connection)
+
+    def test_impala_sasl_ldap_hiveserver2_connect(self):
+        self.connection = connect(host, impala_port,
+                                  protocol="hiveserver2", auth_mechanism="LDAP", timeout=5,
                                   ldap_user="cloudera", ldap_password="cloudera")
         self._execute_queries(self.connection)
 
-    @pytest.mark.skipif(NO_BEESWAX, reason=NO_BEESWAX_REASON)
-    def test_hive_ldap_beeswax_connect(self):
-        self.connection = connect(host, hive_beeswax_port,
-                                  protocol="beeswax", use_ldap=True, timeout=5,
+    def test_impala_puresasl_plain_hiveserver2_connect(self):
+        self.connection = connect(host, impala_port,
+                                  protocol="hiveserver2", auth_mechanism="PLAIN", sasl_lib="puresasl", timeout=5)
+        self._execute_queries(self.connection)
+
+    def test_impala_puresasl_ldap_hiveserver2_connect(self):
+        self.connection = connect(host, impala_port,
+                                  protocol="hiveserver2", auth_mechanism="LDAP", sasl_lib="puresasl", timeout=5,
                                   ldap_user="cloudera", ldap_password="cloudera")
         self._execute_queries(self.connection)
 
-    def test_hive_ldap_hiveserver2_connect(self):
+
+class HiveHS2Tests(ConnectionTests):
+    def test_hive_nosasl_hiveserver2_connect(self):
         self.connection = connect(host, hive_port,
-                                  protocol="hiveserver2", use_ldap=True, timeout=5,
+                                  protocol="hiveserver2", auth_mechanism="NOSASL", timeout=5)
+        self._execute_queries(self.connection)
+
+    def test_hive_sasl_plain_hiveserver2_connect(self):
+        self.connection = connect(host, hive_port,
+                                  protocol="hiveserver2", auth_mechanism="PLAIN", timeout=5)
+        self._execute_queries(self.connection)
+
+    def test_hive_sasl_ldap_hiveserver2_connect(self):
+        self.connection = connect(host, hive_port,
+                                  protocol="hiveserver2", auth_mechanism="LDAP", timeout=5,
+                                  ldap_user="cloudera", ldap_password="cloudera")
+        self._execute_queries(self.connection)
+
+    def test_hive_puresasl_plain_hiveserver2_connect(self):
+        self.connection = connect(host, hive_port,
+                                  protocol="hiveserver2", auth_mechanism="PLAIN", sasl_lib="puresasl", timeout=5)
+        self._execute_queries(self.connection)
+
+    def test_hive_puresasl_ldap_hiveserver2_connect(self):
+        self.connection = connect(host, hive_port,
+                                  protocol="hiveserver2", auth_mechanism="LDAP", sasl_lib="puresasl", timeout=5,
                                   ldap_user="cloudera", ldap_password="cloudera")
         self._execute_queries(self.connection)

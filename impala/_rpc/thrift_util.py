@@ -18,7 +18,6 @@
 from thrift.transport.TSocket import TSocket
 from thrift.transport.TTransport import TBufferedTransport
 import getpass
-import sasl
 
 def get_socket(host, port, use_ssl, ca_cert):
     # based on the Impala shell impl
@@ -57,9 +56,10 @@ def get_transport(socket, host, kerberos_service_name, auth_mechanism="NOSASL",
 
     # Initializes a sasl client
     from impala.thrift_sasl import TSaslClientTransport
-    from impala.sasl_compat import build_sasl_factory
+    from impala.sasl_compat import build_sasl_client_factory
 
-    sasl_factory = build_sasl_factory(host, auth_mechanism, user, password,
-                                      kerberos_service_name, sasl_lib)
+    sasl_client_factory = \
+        build_sasl_client_factory(host, auth_mechanism, user, password,
+                                  kerberos_service_name, sasl_lib)
 
-    return TSaslClientTransport(sasl_factory, auth_mechanism, socket)
+    return TSaslClientTransport(sasl_client_factory, auth_mechanism, socket)
